@@ -2,7 +2,6 @@ package com.example.ian.fsm
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
@@ -15,69 +14,36 @@ class MainActivity : AppCompatActivity() {
 
         val fsm = Fsm()
 
-        val stateWalk = object : State("walk") {
-            override fun onEnter() {
-                toast("onEnter:stateWalk")
-            }
+        fsm.addState("walk")
+                .addTransition("next", "run")
+                .onEnter({ state -> toast("hello state:" + state) })
+                .onUpdate { state ->
+                    toast("Update ... walk")
+                    textHello.postDelayed({
+                        state.transition("next")
+                    }, 1000)
+                }
 
-            override fun onUpdate() {
-                toast("onUpdate:stateWalk")
+        fsm.addState("run")
+                .addTransition("next", "walk")
+                .onEnter { s -> toast("onEnter:" + s.name) }
+                .onExit { s -> toast("bye bye $s") }
 
-                textHello.postDelayed({
-                    transition("next")
-                }, 1000)
+        fsm.startWithInitialState("walk")
 
-            }
-
-            override fun onExit() {
-                toast("onExit:stateWalk")
-            }
-        }
-
-        fsm.setOnChangeState(object : Fsm.OnChangeStateListener {
-            override fun onChangeState(state: State) {
-                buttonUpdate?.text = state.name.toString()
-            }
-        })
-
-        fsm.addState(stateWalk)
-        fsm.addState(object :State("run"){
-            override fun onEnter() {
-                toast("onEnter:run")
-            }
-
-            override fun onExit() {
-                toast("onExit:run")
-            }
-
-            override fun onUpdate() {
-                toast("onUpdate:run")
-            }
-        })
-
-        stateWalk.addTransition("next", "run")
-
-        fsm.startWithInitialState(stateWalk)
-
-
-        buttonUpdate.setOnClickListener(View.OnClickListener { fsm.update() })
+        buttonUpdate.setOnClickListener({ fsm.update() })
+        buttonNext.setOnClickListener({ fsm.transition("next") })
     }
 
     fun toast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
-
-
 }
 
 class Fsm {
 
-    interface OnChangeStateListener {
-        fun onChangeState(state: State)
-    }
-
     private val statePool = Hashtable<Any, State>()
-    private val transitions: Hashtable<State, Hashtable<Any, Any>> = Hashtable()
+    private val transitions: Hashtable<Any, Hashtable<Any, Any>> = Hashtable()
     fun transitionWith(state: State, t: Any): State? {
         var nextState = getStateByTransition(state, t)
 
@@ -89,10 +55,10 @@ class Fsm {
         return null
     }
 
-    private fun getStateByTransition(state: State, t: Any): State? {
-        val table = transitions[state]!!
+    private fun getStateByTransition(state: Any, t: Any): State? {
+        val table = transitions[stateAsName(state)]!!
         val s = table[t]
-        return when(s) {
+        return when (s) {
             null -> null
             is State -> s
             else -> {
@@ -101,70 +67,129 @@ class Fsm {
         }
     }
 
-    private var state: State = object : State("dummy") {
-        override fun onEnter() {
-        }
-
-        override fun onExit() {
-        }
-
-        override fun onUpdate() {
-        }
-    }
-    private var onChangeStateListener: Fsm.OnChangeStateListener = object : Fsm.OnChangeStateListener {
-        override fun onChangeState(state: State) {
-        }
-    }
+    private var state: State = State("dummy")
 
     private fun changeState(nextState: State) {
-        if (state != null) {
-            state.onExit()
-        }
+        state.exit()
         state = nextState
-        onChangeStateListener.onChangeState(nextState)
-        nextState.onEnter()
+        nextState.enter()
     }
 
+    fun addState(state: Any): State {
+        if (state is State) {
+            return initializeNewState(state)
+        }
+        return initializeNewState(buildNewStateWithName(state))
+    }
 
-    fun addState(state: State) {
+    private fun initializeNewState(state: State): State {
         state.setFsm(this)
-        transitions.put(state, Hashtable())
         statePool.put(state.name, state)
+        addTransitionTableForState(state)
+        return state
     }
 
-    fun startWithInitialState(initialState: State) {
-        changeState(initialState)
+    private fun buildNewStateWithName(name: Any): State {
+        val newState = State(name)
+        return newState
     }
 
+    private fun addTransitionTableForState(any: Any): Hashtable<Any, Any> {
+        val name = stateAsName(any)
 
-    fun setOnChangeState(onChangeStateListener: Fsm.OnChangeStateListener) {
-        this.onChangeStateListener = onChangeStateListener
+        var table = transitions[name]
+
+        return when (table) {
+            null -> {
+                val newTable = Hashtable<Any, Any>()
+                transitions.put(name, newTable)
+                newTable
+            }
+            else -> table
+        }
+    }
+
+    fun startWithInitialState(initialState: Any) {
+        changeState(asState(initialState))
+    }
+
+    private fun stateAsName(state: Any) = when (state) {
+        is State -> state.name
+        else -> state
+    }
+
+    private fun asState(any: Any): State {
+        return when (any) {
+            is State -> any
+            else -> {
+                var state = statePool[any]
+                if (state != null) {
+                    return state
+                }
+                throw NullPointerException("State $any not found in state pool")
+            }
+        }
     }
 
     fun update() {
-        state.onUpdate()
+        state.update()
     }
 
-    fun addTransition(stateBefore: State, transition: Any, stateTarget: Any) {
-        val table = transitions[stateBefore]
-        table!!.put(transition, stateTarget)
+    fun addTransition(state: Any, transition: Any, target: Any) {
+        val table = addTransitionTableForState(state)
+        table.put(transition, stateAsName(target))
+    }
+
+    fun transition(transition: Any) {
+        transitionWith(state, transition)
     }
 }
 
-abstract class State(val name: Any) {
+class State(val name: Any) {
+
     private lateinit var fsm: Fsm
+    private var functionOnEnter: (State) -> Unit = {}
+    private var functionOnUpdate: (State) -> Unit = {}
+    private var functionOnExit: (State) -> Unit = {}
 
     fun setFsm(fsm: Fsm) {
         this.fsm = fsm
     }
 
-    abstract fun onEnter()
-    abstract fun onExit()
-    abstract fun onUpdate()
-
-    fun transition(t: Any) = fsm.transitionWith(this, t)
-    fun addTransition(transition: Any, state: Any) {
-        fsm.addTransition(this, transition, state)
+    fun onEnter(function: (State) -> Unit): State {
+        this.functionOnEnter = function
+        return this
     }
 
+    fun onUpdate(function: (State) -> Unit): State {
+        this.functionOnUpdate = function
+        return this
+    }
+
+    fun onExit(function: (State) -> Unit): State {
+        this.functionOnExit = function
+        return this
+    }
+
+    fun enter() {
+        functionOnEnter.invoke(this)
+    }
+
+    fun update() {
+        functionOnUpdate.invoke(this)
+    }
+
+    fun exit() {
+        functionOnExit.invoke(this)
+    }
+
+    fun transition(t: Any) = fsm.transitionWith(this, t)
+    fun addTransition(transition: Any, state: Any): State {
+        fsm.addTransition(this, transition, state)
+        return this
+    }
+
+    override fun toString(): String {
+        return name.toString()
+    }
 }
