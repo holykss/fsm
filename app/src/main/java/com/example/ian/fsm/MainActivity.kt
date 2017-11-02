@@ -47,11 +47,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onExit() {
-                toast("onEnter:run")
+                toast("onExit:run")
             }
 
             override fun onUpdate() {
-                toast("onEnter:run")
+                toast("onUpdate:run")
             }
         })
 
@@ -89,10 +89,12 @@ class Fsm {
         return null
     }
 
-    private fun getStateByTransition(state: State, t: Any): State {
-        val s = transitions[state.name]!![t]
-        return when {
-            s is State -> s
+    private fun getStateByTransition(state: State, t: Any): State? {
+        val table = transitions[state]!!
+        val s = table[t]
+        return when(s) {
+            null -> null
+            is State -> s
             else -> {
                 statePool[s]!!
             }
