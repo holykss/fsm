@@ -2,11 +2,56 @@ package com.ian.fsm
 
 import java.util.*
 
-class Fsm {
+class Fsm(val name: String = "no name") {
 
     private val statePool = Hashtable<Any, State>()
     private val transitions: Hashtable<Any, Hashtable<Any, Any>> = Hashtable()
-    fun transitionWith(state: State, t: Any): State? {
+    private var state: State = State("dummy")
+
+    companion object {
+        fun create(name: String): Fsm {
+            return Fsm(name)
+        }
+    }
+
+    override fun toString(): String {
+        return "Fsm -$name- has ${statePool.size} states.\n${statePool.values}"
+    }
+
+    fun addState(state: Any): State {
+        if (state is State) {
+            return initializeNewState(state)
+        }
+        return initializeNewState(State(state))
+    }
+
+    fun startWithInitialState(initialState: Any) {
+        changeState(asState(initialState))
+    }
+
+    private fun initializeNewState(state: State): State {
+        state.setFsm(this)
+        statePool.put(state.name, state)
+        addTransitionTableForState(state)
+        return state
+    }
+
+    private fun addTransitionTableForState(any: Any): Hashtable<Any, Any> {
+        val name = stateAsName(any)
+
+        var table = transitions[name]
+
+        return when (table) {
+            null -> {
+                val newTable = Hashtable<Any, Any>()
+                transitions.put(name, newTable)
+                newTable
+            }
+            else -> table
+        }
+    }
+
+    private fun transitionWith(state: State, t: Any): State? {
         var nextState = getStateByTransition(state, t)
 
         if (nextState != null) {
@@ -29,50 +74,10 @@ class Fsm {
         }
     }
 
-    private var state: State = State("dummy")
-
     private fun changeState(nextState: State) {
         state.exit()
         state = nextState
         nextState.enter()
-    }
-
-    fun addState(state: Any): State {
-        if (state is State) {
-            return initializeNewState(state)
-        }
-        return initializeNewState(buildNewStateWithName(state))
-    }
-
-    private fun initializeNewState(state: State): State {
-        state.setFsm(this)
-        statePool.put(state.name, state)
-        addTransitionTableForState(state)
-        return state
-    }
-
-    private fun buildNewStateWithName(name: Any): State {
-        val newState = State(name)
-        return newState
-    }
-
-    private fun addTransitionTableForState(any: Any): Hashtable<Any, Any> {
-        val name = stateAsName(any)
-
-        var table = transitions[name]
-
-        return when (table) {
-            null -> {
-                val newTable = Hashtable<Any, Any>()
-                transitions.put(name, newTable)
-                newTable
-            }
-            else -> table
-        }
-    }
-
-    fun startWithInitialState(initialState: Any) {
-        changeState(asState(initialState))
     }
 
     private fun stateAsName(state: Any) = when (state) {

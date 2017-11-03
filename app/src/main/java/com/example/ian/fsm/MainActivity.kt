@@ -8,11 +8,11 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
+    val fsm = Fsm.create("Runner")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        val fsm = Fsm()
 
         fsm.addState("walk")
                 .addTransition("next", "run")

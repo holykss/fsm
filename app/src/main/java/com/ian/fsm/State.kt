@@ -40,7 +40,7 @@ class State(val name: Any) {
         functionOnExit.invoke(this)
     }
 
-    fun transition(t: Any) = machine.transitionWith(this, t)
+    fun transition(t: Any) = machine.transition(t)
     fun addTransition(transition: Any, state: Any): State {
         machine.addTransition(this, transition, state)
         return this
