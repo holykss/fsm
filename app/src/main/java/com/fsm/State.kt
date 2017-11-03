@@ -1,4 +1,4 @@
-package com.ian.fsm
+package com.fsm
 
 class State(val name: Any) {
 

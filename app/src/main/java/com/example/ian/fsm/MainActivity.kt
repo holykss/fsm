@@ -3,7 +3,7 @@ package com.example.ian.fsm
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
-import com.ian.fsm.Fsm
+import com.fsm.Fsm
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
