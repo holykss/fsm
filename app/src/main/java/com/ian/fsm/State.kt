@@ -13,6 +13,13 @@ class State(val name: Any) {
 
     fun getFsm() = machine
 
+    fun transition(t: Any) = machine.transition(t)
+    
+    fun addTransition(transition: Any, state: Any): State {
+        machine.addTransition(this, transition, state)
+        return this
+    }
+
     fun onEnter(function: (State) -> Unit): State {
         this.functionOnEnter = function
         return this
@@ -38,12 +45,6 @@ class State(val name: Any) {
 
     fun exit() {
         functionOnExit.invoke(this)
-    }
-
-    fun transition(t: Any) = machine.transition(t)
-    fun addTransition(transition: Any, state: Any): State {
-        machine.addTransition(this, transition, state)
-        return this
     }
 
     override fun toString(): String {
