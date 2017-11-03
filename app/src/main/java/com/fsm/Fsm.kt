@@ -11,12 +11,6 @@ class Fsm(val name: String = "no name") {
     private var functionOnChangeState: (State) -> Unit = {}
 
 
-    companion object {
-        fun create(name: String): Fsm {
-            return Fsm(name)
-        }
-    }
-
     override fun toString(): String {
         return "Fsm -$name- has ${statePool.size} states.\n${statePool.values}"
     }
