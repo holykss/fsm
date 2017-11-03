@@ -5,8 +5,11 @@ import java.util.*
 class Fsm(val name: String = "no name") {
 
     private val statePool = Hashtable<Any, State>()
-    private val transitions: Hashtable<Any, Hashtable<Any, Any>> = Hashtable()
+    private val transitions = Hashtable<Any, Hashtable<Any, Any>>()
+    private val globalTransitions = Hashtable<Any, Any>()
     private var state: State = State("dummy")
+    private var functionOnChangeState: (State) -> Unit = {}
+
 
     companion object {
         fun create(name: String): Fsm {
@@ -65,16 +68,23 @@ class Fsm(val name: String = "no name") {
     private fun getStateByTransition(state: Any, t: Any): State? {
         val table = transitions[stateAsName(state)]!!
         val s = table[t]
-        return when (s) {
-            null -> null
-            is State -> s
-            else -> {
-                statePool[s]!!
-            }
+
+        if (s!=null) {
+            return asState(s)
         }
+
+        var gs = globalTransitions[t]
+        if (gs != null) {
+            return asState(gs)
+        }
+
+        return null
     }
 
     private fun changeState(nextState: State) {
+
+        functionOnChangeState.invoke(nextState)
+
         state.exit()
         state = nextState
         nextState.enter()
@@ -102,12 +112,22 @@ class Fsm(val name: String = "no name") {
         state.update()
     }
 
-    fun addTransition(state: Any, transition: Any, target: Any) {
-        val table = addTransitionTableForState(state)
+    fun addTransition(owner: Any, transition: Any, target: Any) {
+        val table = addTransitionTableForState(owner)
         table.put(transition, stateAsName(target))
     }
 
     fun transition(transition: Any) {
         transitionWith(state, transition)
+    }
+
+
+    fun onChangeState(function: (State) -> Unit) {
+        this.functionOnChangeState = function
+    }
+
+    fun addGlobalTransition(transition: Any, target: Any): Fsm {
+        globalTransitions.put(transition, stateAsName(target))
+        return this
     }
 }
