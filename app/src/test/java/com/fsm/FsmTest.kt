@@ -38,8 +38,11 @@ class FsmTest {
                 .addTransition(T.Fast, S.Walk)
 
         fsm.addState(S.Walk)
+                .addTransition(T.Fast, S.Run)
 
         fsm.addState(S.Run)
+                .addTransition(T.Fast, S.KnockDown)
+                .addTransition(T.Break, S.Walk)
 
         fsm.addState(S.KnockDown)
 
@@ -76,6 +79,23 @@ class FsmTest {
         assertEquals(S.Walk, fsm.getCurrent().name)
         fsm.transition(T.Break)
 
+        assertEquals(S.Idle, fsm.getCurrent().name)
+    }
+
+    @Test
+    fun globalTransitionPriority() {
+        fsm.startWithInitialState(S.Idle)
+        fsm.transition(T.Fast)
+        fsm.transition(T.Fast)
+        assertEquals(S.Run, fsm.getCurrent().name)
+        fsm.transition(T.Break)
+        assertEquals(S.Walk, fsm.getCurrent().name)
+    }
+
+    @Test
+    fun missingTransition() {
+        fsm.startWithInitialState(S.Idle)
+        fsm.transition(T.Slow)
         assertEquals(S.Idle, fsm.getCurrent().name)
     }
 
