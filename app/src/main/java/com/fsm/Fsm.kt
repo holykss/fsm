@@ -116,9 +116,7 @@ class Fsm<S, T>(val name: String = "no name") {
         table.put(transition, stateAsName(target))
     }
 
-    fun transition(transition: T) {
-        transitionWith(state, transition)
-    }
+    fun transition(transition: T) = transitionWith(state, transition)
 
 
     fun onTransition(function: (State<S, T>, T, State<S, T>) -> Unit) {
