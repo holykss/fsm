@@ -69,4 +69,14 @@ class FsmTest {
 
     }
 
+    @Test
+    fun globalTransition() {
+        fsm.startWithInitialState(S.Idle)
+        fsm.transition(T.Fast)
+        assertEquals(S.Walk, fsm.getCurrent().name)
+        fsm.transition(T.Break)
+
+        assertEquals(S.Idle, fsm.getCurrent().name)
+    }
+
 }
