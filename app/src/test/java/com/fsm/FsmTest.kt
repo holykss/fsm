@@ -28,7 +28,7 @@ class FsmTest {
     @Before
     fun initializeFsm() {
         fsm = Fsm("fsmName")
-        fsm.onChangeState { previous, transition, state ->
+        fsm.onTransition { previous, transition, state ->
             println("$previous -> $state by $transition")
         }
 

@@ -8,7 +8,7 @@ class Fsm(val name: String = "no name") {
     private val transitions = Hashtable<Any, Hashtable<Any, Any>>()
     private val globalTransitions = Hashtable<Any, Any>()
     private var state: State = State("dummy")
-    private var functionOnChangeState: (State, Any, State) -> Unit = {previous, transition, next ->  }
+    private var functionOnTransition: (State, Any, State) -> Unit = { previous, transition, next ->  }
 
     fun getCurrent() = state
 
@@ -55,7 +55,7 @@ class Fsm(val name: String = "no name") {
         var nextState = getStateByTransition(state, transition)
 
         if (nextState != null) {
-            functionOnChangeState.invoke(state, transition, nextState)
+            functionOnTransition.invoke(state, transition, nextState)
         }
 
         if (nextState != null) {
@@ -121,8 +121,8 @@ class Fsm(val name: String = "no name") {
     }
 
 
-    fun onChangeState(function: (State, Any, State) -> Unit) {
-        this.functionOnChangeState = function
+    fun onTransition(function: (State, Any, State) -> Unit) {
+        this.functionOnTransition = function
     }
 
     fun addGlobalTransition(transition: Any, target: Any): Fsm {
