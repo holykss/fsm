@@ -8,8 +8,11 @@ class Fsm(val name: String = "no name") {
     private val transitions = Hashtable<Any, Hashtable<Any, Any>>()
     private val globalTransitions = Hashtable<Any, Any>()
     private var state: State = State("dummy")
-    private var functionOnChangeState: (State) -> Unit = {}
+    private var functionOnChangeState: (State, State) -> Unit = {previous, state ->  }
 
+    fun getCurrent() = state
+
+    fun getStates() = statePool.values
 
     override fun toString(): String {
         return "Fsm -$name- has ${statePool.size} states.\n${statePool.values}"
@@ -77,7 +80,7 @@ class Fsm(val name: String = "no name") {
 
     private fun changeState(nextState: State) {
 
-        functionOnChangeState.invoke(nextState)
+        functionOnChangeState.invoke(state, nextState)
 
         state.exit()
         state = nextState
@@ -116,7 +119,7 @@ class Fsm(val name: String = "no name") {
     }
 
 
-    fun onChangeState(function: (State) -> Unit) {
+    fun onChangeState(function: (State, State) -> Unit) {
         this.functionOnChangeState = function
     }
 

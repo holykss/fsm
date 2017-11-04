@@ -23,11 +23,46 @@ class FsmTest {
     }
 
     @Test
-    fun fsm작동법() {
-
-        val fsm = Fsm<S, T>("fsmName")
+    fun fsmName() {
+        val fsm = Fsm("fsmName")
 
         assertEquals("fsmName", fsm.name)
+    }
+
+    @Test
+    fun fsmCount() {
+        val fsm = Fsm("fsmName")
+
+        fsm.onChangeState { previous, state ->
+            println("$previous -> $state")
+        }
+
+        fsm.addState(S.Idle)
+                .addTransition(T.Fast, S.Walk)
+
+        fsm.addState(S.Walk)
+
+        assertEquals(2, fsm.getStates().size)
+    }
+
+    @Test
+    fun IdleStateShouldBeChangedToWalkStateOnTransitionFast() {
+        val fsm = Fsm("fsmName")
+
+        assertEquals("fsmName", fsm.name)
+
+        fsm.addGlobalTransition(T.Break, S.Idle)
+
+        fsm.addState(S.Idle)
+                .addTransition(T.Fast, S.Walk)
+
+        fsm.addState(S.Walk)
+
+        fsm.startWithInitialState(S.Idle)
+
+        fsm.transition(T.Fast)
+
+        assertEquals(S.Walk, fsm.getCurrent().name)
 
     }
 
