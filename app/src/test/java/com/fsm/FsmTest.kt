@@ -3,6 +3,7 @@ package com.fsm
 import org.junit.Test
 
 import org.junit.Assert.*
+import org.junit.Before
 
 /**
  * Created by ian on 2017. 11. 4..
@@ -22,34 +23,14 @@ class FsmTest {
         Break,
     }
 
-    @Test
-    fun fsmName() {
-        val fsm = Fsm("fsmName")
+    lateinit var fsm : Fsm
 
-        assertEquals("fsmName", fsm.name)
-    }
-
-    @Test
-    fun fsmCount() {
-        val fsm = Fsm("fsmName")
-
-        fsm.onChangeState { previous, state ->
-            println("$previous -> $state")
+    @Before
+    fun initializeFsm() {
+        fsm = Fsm("fsmName")
+        fsm.onChangeState { previous, transition, state ->
+            println("$previous -> $state by $transition")
         }
-
-        fsm.addState(S.Idle)
-                .addTransition(T.Fast, S.Walk)
-
-        fsm.addState(S.Walk)
-
-        assertEquals(2, fsm.getStates().size)
-    }
-
-    @Test
-    fun IdleStateShouldBeChangedToWalkStateOnTransitionFast() {
-        val fsm = Fsm("fsmName")
-
-        assertEquals("fsmName", fsm.name)
 
         fsm.addGlobalTransition(T.Break, S.Idle)
 
@@ -58,7 +39,29 @@ class FsmTest {
 
         fsm.addState(S.Walk)
 
+        fsm.addState(S.Run)
+
+        fsm.addState(S.KnockDown)
+
+
+    }
+
+    @Test
+    fun fsmName() {
+        assertEquals("fsmName", fsm.name)
+    }
+
+    @Test
+    fun fsmCount() {
+        assertEquals(S.values().size, fsm.getStates().size)
+    }
+
+    @Test
+    fun IdleStateShouldBeChangedToWalkStateOnTransitionFast() {
+
         fsm.startWithInitialState(S.Idle)
+
+        assertEquals(S.Idle, fsm.getCurrent().name)
 
         fsm.transition(T.Fast)
 
