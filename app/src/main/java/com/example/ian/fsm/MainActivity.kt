@@ -8,7 +8,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    val fsm = Fsm<Any>("Runner")
+    val fsm = Fsm<String, String>("Runner")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

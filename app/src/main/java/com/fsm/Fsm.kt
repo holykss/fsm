@@ -2,13 +2,13 @@ package com.fsm
 
 import java.util.*
 
-class Fsm<T>(val name: String = "no name") {
+class Fsm<S, T>(val name: String = "no name") {
 
-    private val statePool = Hashtable<Any, State<T>>()
+    private val statePool = Hashtable<Any, State<S, T>>()
     private val transitions = Hashtable<Any, Hashtable<T, Any>>()
     private val globalTransitions = Hashtable<T, Any>()
-    private var state: State<T> = State("dummy")
-    private var functionOnTransition: (State<T>, T, State<T>) -> Unit = { previous, transition, next -> }
+    private var state: State<S, T> = State("dummy")
+    private var functionOnTransition: (State<S, T>, T, State<S, T>) -> Unit = { previous, transition, next -> }
 
     fun getCurrent() = state
 
@@ -18,18 +18,18 @@ class Fsm<T>(val name: String = "no name") {
         return "Fsm -$name- has ${statePool.size} states.\n${statePool.values}"
     }
 
-    fun addState(state: Any): State<T> {
-        if (state is State<*>) {
-            return initializeNewState(state as State<T>)
+    fun addState(state: Any): State<S, T> {
+        if (state is State<*, *>) {
+            return initializeNewState(state as State<S, T>)
         }
         return initializeNewState(State(state))
     }
 
-    fun startWithInitialState(initialState: Any) {
-        changeState(asState(initialState))
+    fun startWithInitialState(initialState: S) {
+        changeState(asState(initialState!!))
     }
 
-    private fun initializeNewState(state: State<T>): State<T> {
+    private fun initializeNewState(state: State<S, T>): State<S, T> {
         state.setFsm(this)
         statePool.put(state.name, state)
         addTransitionTableForState(state)
@@ -51,7 +51,7 @@ class Fsm<T>(val name: String = "no name") {
         }
     }
 
-    private fun transitionWith(state: State<T>, transition: T): State<T>? {
+    private fun transitionWith(state: State<S, T>, transition: T): State<S, T>? {
         var nextState = getStateByTransition(state, transition)
 
         if (nextState != null) {
@@ -66,7 +66,7 @@ class Fsm<T>(val name: String = "no name") {
         return null
     }
 
-    private fun getStateByTransition(state: Any, transition: T): State<T>? {
+    private fun getStateByTransition(state: Any, transition: T): State<S, T>? {
         val table = transitions[stateAsName(state)]!!
         val s = table[transition]
 
@@ -82,7 +82,7 @@ class Fsm<T>(val name: String = "no name") {
         return null
     }
 
-    private fun changeState(nextState: State<T>) {
+    private fun changeState(nextState: State<S, T>) {
 
         state.exit()
         state = nextState
@@ -90,13 +90,13 @@ class Fsm<T>(val name: String = "no name") {
     }
 
     private fun stateAsName(state: Any) = when (state) {
-        is State<*> -> state.name
+        is State<*, *> -> state.name
         else -> state
     }
 
-    private fun asState(any: Any): State<T> {
+    private fun asState(any: Any): State<S, T> {
         return when (any) {
-            is State<*> -> any as State<T>
+            is State<*, *> -> any as State<S, T>
             else -> {
                 var state = statePool[any]
                 if (state != null) {
@@ -121,11 +121,11 @@ class Fsm<T>(val name: String = "no name") {
     }
 
 
-    fun onTransition(function: (State<T>, T, State<T>) -> Unit) {
+    fun onTransition(function: (State<S, T>, T, State<S, T>) -> Unit) {
         this.functionOnTransition = function
     }
 
-    fun addGlobalTransition(transition: T, target: Any): Fsm<T> {
+    fun addGlobalTransition(transition: T, target: Any): Fsm<S, T> {
         globalTransitions.put(transition, stateAsName(target))
         return this
     }

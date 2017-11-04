@@ -23,7 +23,7 @@ class FsmTest {
         Break,
     }
 
-    lateinit var fsm : Fsm<T>
+    lateinit var fsm : Fsm<S, T>
 
     @Before
     fun initializeFsm() {
