@@ -3,9 +3,9 @@ package com.fsm
 class State<S, T>(val name: Any) {
 
     private lateinit var machine: Fsm<S, T>
-    private var functionOnEnter: (State<S, T>) -> Unit = {}
-    private var functionOnUpdate: (State<S, T>) -> Unit = {}
-    private var functionOnExit: (State<S, T>) -> Unit = {}
+    private var functionOnEnter: (state: State<S, T>) -> Unit = {}
+    private var functionOnUpdate: (state: State<S, T>) -> Unit = {}
+    private var functionOnExit: (state: State<S, T>) -> Unit = {}
 
     fun setFsm(fsm: Fsm<S, T>) {
         this.machine = fsm
@@ -14,23 +14,23 @@ class State<S, T>(val name: Any) {
     fun getFsm() = machine
 
     fun transition(transition: T) = machine.transition(transition)
-    
+
     fun addTransition(transition: T, state: Any): State<S, T> {
         machine.addTransition(this, transition, state)
         return this
     }
 
-    fun onEnter(function: (State<S, T>) -> Unit): State<S, T> {
+    fun onEnter(function: (state: State<S, T>) -> Unit): State<S, T> {
         this.functionOnEnter = function
         return this
     }
 
-    fun onUpdate(function: (State<S, T>) -> Unit): State<S, T> {
+    fun onUpdate(function: (state: State<S, T>) -> Unit): State<S, T> {
         this.functionOnUpdate = function
         return this
     }
 
-    fun onExit(function: (State<S, T>) -> Unit): State<S, T> {
+    fun onExit(function: (state: State<S, T>) -> Unit): State<S, T> {
         this.functionOnExit = function
         return this
     }
