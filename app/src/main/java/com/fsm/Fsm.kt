@@ -33,6 +33,9 @@ class Fsm<S, T>(val name: String = "no name") {
     }
 
     private fun initializeNewState(state: State<S, T>): State<S, T> {
+        if (statePool.containsKey(state.name)) {
+            throw DuplicationStateException("Found duplication [${state.name}]")
+        }
         state.setFsm(this)
         statePool.put(state.name, state)
         addTransitionTableForState(state)
@@ -131,4 +134,6 @@ class Fsm<S, T>(val name: String = "no name") {
         globalTransitions.put(transition, stateAsName(target))
         return this
     }
+
+    fun existsState(state: S) = statePool.containsKey(state)
 }

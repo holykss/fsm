@@ -99,4 +99,18 @@ class FsmTest {
         assertEquals(S.Idle, fsm.getCurrent().name)
     }
 
+    @Test
+    fun preventDuplicationOfState() {
+        assertTrue(fsm.existsState(S.Walk))
+        try {
+            fsm.addState(S.Walk)
+
+            fail()
+        } catch (e:Exception) {
+            assertTrue(e is DuplicationStateException)
+        }
+
+
+    }
+
 }
