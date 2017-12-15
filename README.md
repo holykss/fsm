@@ -33,8 +33,8 @@
 
 
 # ToDo List
-- <S>onChangeState
-- <S>isActive
+- <S>onChangeState</S>
+- <S>isActive</S>
 - <S>globalTransition</S>
-- <S>generic Transition, genericState
+- <S>generic Transition, genericState</S>
 - 중복 State / Transition 생성시 예외 처리
